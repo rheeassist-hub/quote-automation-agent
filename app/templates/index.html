@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>B2B 견적서 자동화 에이전트</title>
+  <style>
+    body { font-family: -apple-system, "Apple SD Gothic Neo", sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; background: #f5f6f8; color: #222; }
+    h1 { font-size: 22px; }
+    .card { background: #fff; border-radius: 10px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 20px; }
+    textarea { width: 100%; min-height: 180px; padding: 12px; font-size: 14px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+    input[type=text] { width: 100%; padding: 10px; font-size: 14px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; margin-bottom: 12px; }
+    button { background: #2c3e50; color: #fff; border: none; padding: 12px 24px; border-radius: 6px; font-size: 15px; cursor: pointer; }
+    button:hover { background: #1a242f; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #eee; padding: 8px; font-size: 13px; text-align: left; }
+    th { background: #f0f2f4; }
+    .hint { color: #777; font-size: 13px; margin-bottom: 10px; }
+    .example { background: #f9fafb; border: 1px dashed #ccc; padding: 10px; font-size: 13px; white-space: pre-wrap; border-radius: 6px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>📋 B2B 견적서 자동화 에이전트 (인쇄/포장재)</h1>
+  <div class="card">
+    <p class="hint">이메일/카톡 문의 원문을 그대로 붙여넣으세요. 품목명 + 수량이 포함된 줄을 자동 인식해서 단가표 기준으로 견적을 계산하고 PDF를 생성합니다.</p>
+    <form action="/generate-quote-form" method="post">
+      <input type="text" name="customer_name" placeholder="고객사명 (예: 주식회사 예시)" />
+      <textarea name="inquiry_text" placeholder="문의 내용을 붙여넣으세요">안녕하세요, 아래와 같이 견적 부탁드립니다.
+- 명함 1000장 (350g 아트지, 양면 인쇄)
+- 전단지 5000매 A4 컬러
+- 포장박스 300개 (표준 사이즈)
+빠른 답변 부탁드립니다. 감사합니다.</textarea>
+      <br><br>
+      <button type="submit">견적서 PDF 생성</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3>현재 등록된 품목 단가표</h3>
+    <table>
+      <tr><th>품목</th><th>단위</th><th>기본단가</th><th>최소수량</th><th>수량할인</th></tr>
+      {% for it in items %}
+      <tr>
+        <td>{{ it.name }}</td>
+        <td>{{ it.unit }}</td>
+        <td>{{ "{:,}".format(it.base_unit_price) }} 원</td>
+        <td>{{ "{:,}".format(it.min_qty) }} {{ it.unit }}</td>
+        <td>
+          {% for t in it.discount_tiers %}{{ "{:,}".format(t.min_qty) }}{{it.unit}}↑: {{ (t.rate*100)|round(0)|int }}%&nbsp;&nbsp;{% endfor %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>API로 직접 호출하기 (curl 예시)</h3>
+    <pre style="background:#f0f2f4; padding:10px; border-radius:6px; overflow-x:auto; font-size:12px;">curl -s -X POST http://127.0.0.1:8000/generate-quote \
+  -F "customer_name=테스트고객사" \
+  -F "inquiry_text=명함 1000장 부탁드립니다. 전단지 5000매도 같이 견적 주세요." \
+  -o quote.pdf</pre>
+  </div>
+</body>
+</html>

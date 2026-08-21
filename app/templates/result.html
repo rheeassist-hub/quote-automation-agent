@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>견적서 생성 완료</title>
+  <style>
+    body { font-family: -apple-system, "Apple SD Gothic Neo", sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; background: #f5f6f8; color: #222; }
+    .card { background: #fff; border-radius: 10px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #eee; padding: 8px; font-size: 13px; text-align: left; }
+    th { background: #f0f2f4; }
+    a.btn { display: inline-block; background: #2c3e50; color: #fff; padding: 12px 24px; border-radius: 6px; text-decoration: none; margin-top: 10px; }
+    .warn { color: #b23; font-size: 13px; }
+    .totals td { font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>✅ 견적서가 생성되었습니다</h1>
+  <div class="card">
+    <p>고객사: {{ customer_name or "미지정" }}</p>
+    <p>인식된 품목 {{ summary.matched_count }}건 / 미인식 {{ summary.unmatched_count }}건</p>
+    <a class="btn" href="{{ pdf_url }}" target="_blank">📄 PDF 다운로드 ({{ summary.filename }})</a>
+  </div>
+
+  <div class="card">
+    <h3>견적 요약</h3>
+    <table>
+      <tr><th>품목</th><th>수량</th><th>단가</th><th>할인율</th><th>적용단가</th><th>금액</th></tr>
+      {% for l in quote.lines %}
+      <tr>
+        <td>{{ l.name }}{% if l.below_min_qty %} <span class="warn">(최소수량미만)</span>{% endif %}</td>
+        <td>{{ "{:,}".format(l.quantity) }} {{ l.unit }}</td>
+        <td>{{ "{:,.0f}".format(l.unit_price) }}</td>
+        <td>{{ (l.discount_rate*100)|round(0)|int }}%</td>
+        <td>{{ "{:,.0f}".format(l.discounted_unit_price) }}</td>
+        <td>{{ "{:,}".format(l.line_total) }}</td>
+      </tr>
+      {% endfor %}
+      <tr class="totals"><td colspan="5">공급가액</td><td>{{ "{:,}".format(quote.subtotal) }} {{ quote.currency }}</td></tr>
+      <tr class="totals"><td colspan="5">부가세(10%)</td><td>{{ "{:,}".format(quote.vat) }} {{ quote.currency }}</td></tr>
+      <tr class="totals"><td colspan="5">합계</td><td>{{ "{:,}".format(quote.total) }} {{ quote.currency }}</td></tr>
+    </table>
+
+    {% if quote.unmatched_lines %}
+    <h4>확인 필요 (자동 인식 실패)</h4>
+    <ul>
+      {% for u in quote.unmatched_lines %}
+      <li>"{{ u.raw_text }}" — {{ u.reason or "품목 인식 실패" }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </div>
+
+  <p><a href="/">&larr; 새 견적 작성하기</a></p>
+</body>
+</html>

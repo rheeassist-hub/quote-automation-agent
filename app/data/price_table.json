@@ -1,0 +1,123 @@
+{
+  "currency": "KRW",
+  "updated": "2026-08-21",
+  "items": [
+    {
+      "code": "BCARD",
+      "name": "명함",
+      "aliases": ["명함", "business card", "biz card", "네임카드"],
+      "unit": "매",
+      "base_unit_price": 50,
+      "min_qty": 100,
+      "spec_note": "기본 350g 아트지, 단면 인쇄 기준. 양면/고급지 옵션 별도 협의",
+      "discount_tiers": [
+        { "min_qty": 100, "rate": 0.0 },
+        { "min_qty": 500, "rate": 0.10 },
+        { "min_qty": 1000, "rate": 0.18 },
+        { "min_qty": 3000, "rate": 0.25 }
+      ]
+    },
+    {
+      "code": "FLYER",
+      "name": "전단지",
+      "aliases": ["전단지", "전단", "flyer", "leaflet", "리플렛"],
+      "unit": "매",
+      "base_unit_price": 35,
+      "min_qty": 100,
+      "spec_note": "A4, 아트지 150g, 단면 컬러 기준",
+      "discount_tiers": [
+        { "min_qty": 100, "rate": 0.0 },
+        { "min_qty": 1000, "rate": 0.12 },
+        { "min_qty": 5000, "rate": 0.22 },
+        { "min_qty": 10000, "rate": 0.30 }
+      ]
+    },
+    {
+      "code": "STICKER",
+      "name": "스티커",
+      "aliases": ["스티커", "sticker", "라벨", "label"],
+      "unit": "매",
+      "base_unit_price": 80,
+      "min_qty": 100,
+      "spec_note": "원형/사각 커팅, 유포지 기준",
+      "discount_tiers": [
+        { "min_qty": 100, "rate": 0.0 },
+        { "min_qty": 500, "rate": 0.08 },
+        { "min_qty": 2000, "rate": 0.18 },
+        { "min_qty": 5000, "rate": 0.28 }
+      ]
+    },
+    {
+      "code": "BOX",
+      "name": "포장박스",
+      "aliases": ["박스", "포장박스", "box", "패키지 박스", "판지박스", "골판지박스"],
+      "unit": "개",
+      "base_unit_price": 900,
+      "min_qty": 50,
+      "spec_note": "골판지 3겹, 표준 사이즈 기준. 사이즈/인쇄 도수에 따라 변동",
+      "discount_tiers": [
+        { "min_qty": 50, "rate": 0.0 },
+        { "min_qty": 300, "rate": 0.10 },
+        { "min_qty": 1000, "rate": 0.20 },
+        { "min_qty": 3000, "rate": 0.28 }
+      ]
+    },
+    {
+      "code": "BAG",
+      "name": "쇼핑백",
+      "aliases": ["쇼핑백", "종이가방", "bag", "쇼핑 백", "지관가방"],
+      "unit": "개",
+      "base_unit_price": 650,
+      "min_qty": 100,
+      "spec_note": "크라프트지, 로고 1도 인쇄 기준",
+      "discount_tiers": [
+        { "min_qty": 100, "rate": 0.0 },
+        { "min_qty": 500, "rate": 0.10 },
+        { "min_qty": 2000, "rate": 0.20 },
+        { "min_qty": 5000, "rate": 0.27 }
+      ]
+    },
+    {
+      "code": "ENVELOPE",
+      "name": "봉투",
+      "aliases": ["봉투", "envelope", "각봉투", "양면봉투"],
+      "unit": "매",
+      "base_unit_price": 120,
+      "min_qty": 100,
+      "spec_note": "규격 각대봉투, 단색 인쇄 기준",
+      "discount_tiers": [
+        { "min_qty": 100, "rate": 0.0 },
+        { "min_qty": 1000, "rate": 0.12 },
+        { "min_qty": 3000, "rate": 0.20 }
+      ]
+    },
+    {
+      "code": "BROCHURE",
+      "name": "브로슈어",
+      "aliases": ["브로슈어", "브로셔", "brochure", "카탈로그", "catalog", "catalogue"],
+      "unit": "부",
+      "base_unit_price": 1200,
+      "min_qty": 50,
+      "spec_note": "8p 접지, 아트지 150g 기준",
+      "discount_tiers": [
+        { "min_qty": 50, "rate": 0.0 },
+        { "min_qty": 300, "rate": 0.10 },
+        { "min_qty": 1000, "rate": 0.20 }
+      ]
+    },
+    {
+      "code": "TAPE",
+      "name": "포장테이프",
+      "aliases": ["테이프", "포장테이프", "tape", "박스테이프", "커스텀테이프"],
+      "unit": "롤",
+      "base_unit_price": 1800,
+      "min_qty": 50,
+      "spec_note": "OPP 테이프, 로고 인쇄 기준",
+      "discount_tiers": [
+        { "min_qty": 50, "rate": 0.0 },
+        { "min_qty": 200, "rate": 0.08 },
+        { "min_qty": 500, "rate": 0.15 }
+      ]
+    }
+  ]
+}
