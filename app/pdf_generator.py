@@ -21,18 +21,30 @@ from reportlab.pdfbase.ttfonts import TTFont
 
 from .pricing import QuoteResult
 
-# ---- 한글 폰트 등록 (macOS 기본 탑재 AppleGothic 사용, 없으면 기본폰트로 fallback) ----
+# ---- 한글 폰트 등록 ----
+# 1순위: 리포에 번들된 NanumGothic (Vercel Linux 서버리스 환경 포함 모든 환경에서 동작)
+# 2순위: macOS 로컬 개발 환경의 시스템 폰트
+# 3순위: reportlab 기본 폰트(Helvetica, 한글 미지원)로 폴백
 KOREAN_FONT_NAME = "Helvetica"
+KOREAN_FONT_BOLD_NAME = "Helvetica-Bold"
+
+_BUNDLED_DIR = Path(__file__).resolve().parent / "fonts"
 _CANDIDATE_FONTS = [
-    "/System/Library/Fonts/Supplemental/AppleGothic.ttf",
-    "/System/Library/Fonts/AppleSDGothicNeo.ttc",
-    "/Library/Fonts/AppleGothic.ttf",
+    (_BUNDLED_DIR / "NanumGothic-Regular.ttf", _BUNDLED_DIR / "NanumGothic-Bold.ttf"),
+    (Path("/System/Library/Fonts/Supplemental/AppleGothic.ttf"), None),
+    (Path("/System/Library/Fonts/AppleSDGothicNeo.ttc"), None),
+    (Path("/Library/Fonts/AppleGothic.ttf"), None),
 ]
-for _font_path in _CANDIDATE_FONTS:
-    if Path(_font_path).exists():
+for _regular_path, _bold_path in _CANDIDATE_FONTS:
+    if _regular_path.exists():
         try:
-            pdfmetrics.registerFont(TTFont("KoreanFont", _font_path))
+            pdfmetrics.registerFont(TTFont("KoreanFont", str(_regular_path)))
             KOREAN_FONT_NAME = "KoreanFont"
+            if _bold_path and Path(_bold_path).exists():
+                pdfmetrics.registerFont(TTFont("KoreanFont-Bold", str(_bold_path)))
+                KOREAN_FONT_BOLD_NAME = "KoreanFont-Bold"
+            else:
+                KOREAN_FONT_BOLD_NAME = "KoreanFont"
             break
         except Exception:
             continue

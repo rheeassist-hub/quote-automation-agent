@@ -1,7 +1,7 @@
 venv/
 __pycache__/
 *.pyc
-output/*.pdf
+output/
 .DS_Store
-*.egg-info/
-venv2/
+.git/
+README.md

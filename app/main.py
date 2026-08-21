@@ -1,6 +1,7 @@
 """B2B 견적서 자동화 에이전트 - FastAPI 백엔드."""
 from __future__ import annotations
 
+import os
 import uuid
 from pathlib import Path
 
@@ -14,8 +15,15 @@ from .pricing import build_quote
 from .pdf_generator import generate_quote_pdf
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-OUTPUT_DIR = BASE_DIR / "output"
-OUTPUT_DIR.mkdir(exist_ok=True)
+
+# Vercel(및 대부분의 서버리스 환경)은 배포 코드 디렉토리가 읽기 전용이며,
+# 오직 /tmp 만 쓰기 가능하다. VERCEL 환경변수가 있으면 /tmp를 사용하고,
+# 로컬 개발 환경에서는 기존처럼 프로젝트 내 output/ 디렉토리를 사용한다.
+if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+    OUTPUT_DIR = Path("/tmp") / "output"
+else:
+    OUTPUT_DIR = BASE_DIR / "output"
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 app = FastAPI(title="B2B 견적서 자동화 에이전트", version="0.1.0")
 
