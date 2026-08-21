@@ -5,3 +5,4 @@ output/*.pdf
 .DS_Store
 *.egg-info/
 venv2/
+.vercel

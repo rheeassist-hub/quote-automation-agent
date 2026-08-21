@@ -25,9 +25,24 @@ else:
     OUTPUT_DIR = BASE_DIR / "output"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
+import jinja2
+
 app = FastAPI(title="B2B 견적서 자동화 에이전트", version="0.1.0")
 
-templates = Jinja2Templates(directory=str(BASE_DIR / "app" / "templates"))
+# Vercel 서버리스 환경에서 Jinja2Templates(FastAPI 래퍼)의 내부 LRUCache가
+# "unhashable type: 'dict'"로 깨지는 문제가 있어, 캐시를 아예 끈 순수 jinja2
+# Environment를 직접 사용한다 (요청마다 템플릿을 새로 컴파일하지만 이 앱 규모에선 무해함).
+_jinja_env = jinja2.Environment(
+    loader=jinja2.FileSystemLoader(str(BASE_DIR / "app" / "templates")),
+    cache_size=0,
+    autoescape=jinja2.select_autoescape(["html"]),
+)
+
+
+def render_template(name: str, **context) -> str:
+    return _jinja_env.get_template(name).render(**context)
+
+
 if (BASE_DIR / "static").exists():
     app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
@@ -36,10 +51,7 @@ PRICE_TABLE = load_price_table()
 
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
-    return templates.TemplateResponse(
-        "index.html",
-        {"request": request, "items": PRICE_TABLE["items"]},
-    )
+    return HTMLResponse(render_template("index.html", request=request, items=PRICE_TABLE["items"]))
 
 
 @app.get("/api/price-table")
@@ -120,17 +132,15 @@ def generate_quote_form(request: Request, inquiry_text: str = Form(...), custome
     line_items = parse_inquiry_text(inquiry_text, PRICE_TABLE)
     quote = build_quote(line_items, PRICE_TABLE)
 
-    return templates.TemplateResponse(
+    return HTMLResponse(render_template(
         "result.html",
-        {
-            "request": request,
-            "quote": quote,
-            "summary": summary,
-            "pdf_url": f"/download/{output_path.name}",
-            "inquiry_text": inquiry_text,
-            "customer_name": customer_name,
-        },
-    )
+        request=request,
+        quote=quote,
+        summary=summary,
+        pdf_url=f"/download/{output_path.name}",
+        inquiry_text=inquiry_text,
+        customer_name=customer_name,
+    ))
 
 
 @app.get("/download/{filename}")
