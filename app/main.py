@@ -154,11 +154,62 @@ def download_pdf(filename: str):
 
 LEADS_FILE = OUTPUT_DIR / "leads.jsonl"
 
+# GitHub API를 영속 저장소로 사용 (Vercel /tmp는 휘발성이라 실사용 불가).
+# GITHUB_LEADS_TOKEN, GITHUB_LEADS_REPO(예: "rheeassist-hub/quote-automation-agent")를
+# Vercel 환경변수로 설정하면 leads.jsonl 파일에 커밋으로 계속 append된다.
+GITHUB_TOKEN = os.environ.get("GITHUB_LEADS_TOKEN")
+GITHUB_REPO = os.environ.get("GITHUB_LEADS_REPO", "rheeassist-hub/quote-automation-agent")
+GITHUB_LEADS_PATH = "leads/leads.jsonl"
+
+
+def _save_lead_to_github(entry: dict) -> bool:
+    if not GITHUB_TOKEN:
+        return False
+    import base64
+    import json
+    import urllib.request
+    import urllib.error
+
+    api_base = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{GITHUB_LEADS_PATH}"
+    headers = {
+        "Authorization": f"token {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github+json",
+        "User-Agent": "quote-automation-agent",
+    }
+
+    def _request(method, url, data=None):
+        req = urllib.request.Request(url, data=data, headers=headers, method=method)
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            return json.loads(resp.read().decode())
+
+    try:
+        try:
+            current = _request("GET", api_base)
+            existing_content = base64.b64decode(current["content"]).decode("utf-8")
+            sha = current["sha"]
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                existing_content = ""
+                sha = None
+            else:
+                raise
+
+        new_content = existing_content + json.dumps(entry, ensure_ascii=False) + "\n"
+        payload = {
+            "message": f"lead: {entry.get('company', 'unknown')}",
+            "content": base64.b64encode(new_content.encode("utf-8")).decode(),
+        }
+        if sha:
+            payload["sha"] = sha
+        _request("PUT", api_base, data=json.dumps(payload).encode())
+        return True
+    except Exception:
+        return False
+
 
 @app.post("/leads", response_class=HTMLResponse)
 def submit_lead(request: Request, company: str = Form(...), contact: str = Form(...), message: str = Form("")):
-    """도입 문의 리드 저장. Vercel 서버리스에서는 /tmp라 휘발성이지만,
-    실제 운영 시 여기서 이메일 발송(SMTP)이나 외부 DB/시트 연동으로 교체하면 된다."""
+    """도입 문의 리드 저장. GitHub API로 영속 저장(설정된 경우) + /tmp 로컬 백업."""
     import json
     from datetime import datetime
 
@@ -168,11 +219,12 @@ def submit_lead(request: Request, company: str = Form(...), contact: str = Form(
         "message": message,
         "received_at": datetime.now().isoformat(),
     }
+    saved_to_github = _save_lead_to_github(entry)
     try:
         with open(LEADS_FILE, "a", encoding="utf-8") as f:
             f.write(json.dumps(entry, ensure_ascii=False) + "\n")
     except Exception:
-        pass  # 저장 실패해도 사용자에게는 접수 확인을 보여준다
+        pass
 
     return HTMLResponse(render_template(
         "result.html",
@@ -188,11 +240,11 @@ def submit_lead(request: Request, company: str = Form(...), contact: str = Form(
 
 @app.get("/api/leads")
 def api_leads():
-    """관리자 확인용: 저장된 리드 목록 반환 (인증 없음 - MVP 단계, 운영 시 반드시 인증 추가 필요)."""
+    """관리자 확인용: /tmp에 남은 리드 목록 (이번 함수 인스턴스 한정, 영구 기록은 GitHub leads/leads.jsonl 참고)."""
     import json
 
     if not LEADS_FILE.exists():
-        return {"leads": []}
+        return {"leads": [], "note": "영구 기록은 GitHub 저장소의 leads/leads.jsonl 파일을 확인하세요."}
     leads = []
     with open(LEADS_FILE, "r", encoding="utf-8") as f:
         for line in f:
