@@ -140,6 +140,7 @@ def generate_quote_form(request: Request, inquiry_text: str = Form(...), custome
         pdf_url=f"/download/{output_path.name}",
         inquiry_text=inquiry_text,
         customer_name=customer_name,
+        lead_saved=False,
     ))
 
 
@@ -149,6 +150,56 @@ def download_pdf(filename: str):
     if not file_path.exists():
         return JSONResponse({"error": "file not found"}, status_code=404)
     return FileResponse(str(file_path), media_type="application/pdf", filename=filename)
+
+
+LEADS_FILE = OUTPUT_DIR / "leads.jsonl"
+
+
+@app.post("/leads", response_class=HTMLResponse)
+def submit_lead(request: Request, company: str = Form(...), contact: str = Form(...), message: str = Form("")):
+    """도입 문의 리드 저장. Vercel 서버리스에서는 /tmp라 휘발성이지만,
+    실제 운영 시 여기서 이메일 발송(SMTP)이나 외부 DB/시트 연동으로 교체하면 된다."""
+    import json
+    from datetime import datetime
+
+    entry = {
+        "company": company,
+        "contact": contact,
+        "message": message,
+        "received_at": datetime.now().isoformat(),
+    }
+    try:
+        with open(LEADS_FILE, "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    except Exception:
+        pass  # 저장 실패해도 사용자에게는 접수 확인을 보여준다
+
+    return HTMLResponse(render_template(
+        "result.html",
+        request=request,
+        quote=None,
+        summary=None,
+        pdf_url=None,
+        inquiry_text=None,
+        customer_name=company,
+        lead_saved=True,
+    ))
+
+
+@app.get("/api/leads")
+def api_leads():
+    """관리자 확인용: 저장된 리드 목록 반환 (인증 없음 - MVP 단계, 운영 시 반드시 인증 추가 필요)."""
+    import json
+
+    if not LEADS_FILE.exists():
+        return {"leads": []}
+    leads = []
+    with open(LEADS_FILE, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                leads.append(json.loads(line))
+    return {"leads": leads, "count": len(leads)}
 
 
 @app.get("/health")

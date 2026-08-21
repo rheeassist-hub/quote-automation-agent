@@ -16,6 +16,7 @@
 </head>
 <body>
   <h1>✅ 견적서가 생성되었습니다</h1>
+  {% if quote %}
   <div class="card">
     <p>고객사: {{ customer_name or "미지정" }}</p>
     <p>인식된 품목 {{ summary.matched_count }}건 / 미인식 {{ summary.unmatched_count }}건</p>
@@ -52,5 +53,26 @@
   </div>
 
   <p><a href="/">&larr; 새 견적 작성하기</a></p>
+  {% else %}
+  <div class="card">
+    <p>{{ customer_name }}님, 문의 감사합니다.</p>
+  </div>
+  <p><a href="/">&larr; 메인으로</a></p>
+  {% endif %}
+
+  <div class="card" style="background:#eef4ff; border:1px solid #cdd9f5;">
+    <h3>🚀 우리 업종 맞춤으로 도입하고 싶으신가요?</h3>
+    <p style="font-size:14px; color:#444;">인쇄/포장재 외 다른 업종 단가표로 커스터마이징, 카톡/이메일 자동 연동까지 지원합니다. 연락처를 남겨주시면 담당자가 연락드립니다.</p>
+    {% if lead_saved %}
+    <p style="color:#2c6e2c; font-weight:bold;">✅ 문의가 접수되었습니다. 빠르게 연락드리겠습니다.</p>
+    {% else %}
+    <form action="/leads" method="post">
+      <input type="text" name="company" placeholder="회사/업종명" required />
+      <input type="text" name="contact" placeholder="연락처 (이메일 또는 전화번호)" required />
+      <input type="text" name="message" placeholder="필요한 기능 (선택)" />
+      <button type="submit">도입 문의 남기기</button>
+    </form>
+    {% endif %}
+  </div>
 </body>
 </html>
